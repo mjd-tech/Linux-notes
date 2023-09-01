@@ -1,0 +1,11 @@
+# Deprecated Network Commands
+
+| Deprecated Commands | Replacement Commands                                                                  |
+|---------------------|---------------------------------------------------------------------------------------|
+| arp                 | ip n (ip neighbor)                                                                    |
+| ifconfig            | ip a (ip addr), ip link, ip -s (ip -stats)                                            |
+| iptunnel            | ip tunnel                                                                             |
+| iwconfig            | iw                                                                                    |
+| nameif              | ip link, ifrename                                                                     |
+| netstat             | ss, ip route (for netstat -r), ip -s link (for netstat -i), ip maddr (for netstat -g) |
+| route               | ip r (ip route)                                                                       |
