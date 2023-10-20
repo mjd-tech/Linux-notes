@@ -31,7 +31,7 @@ Always put the expression in quotes to protect it from the shell.
     20
 
 In this case, do **not** put the expression in quotes,  
-The shell does not expand the star \* within a *here document*, and it
+The shell does not expand the star `*` within a *here document*, and it
 does not remove quotes from a here document.  
 
 
