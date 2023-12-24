@@ -150,3 +150,10 @@ If you want to half the size, just multiply by .5 or divide by 2:
 
     ffmpeg -i input.avi -vf "scale=iw*.5:ih*.5" output_half_size.avi
     ffmpeg -i input.avi -vf "scale=iw/2:ih/2" output_half_size.avi
+
+### Fix avi files
+If you launch an avi file in VLC, and get an error "Broken or Missing AVI index"
+
+    ffmpeg -i 'input.avi' -map 0 -c copy 'output.avi'
+
+Note: This can fix other file formats as well.
