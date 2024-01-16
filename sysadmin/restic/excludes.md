@@ -37,11 +37,17 @@ lost+found
 /var/run/*
 /var/lock/*
 
+# Cached packages
+# Arch Linux-based systems
+/var/cache/pacman/pkg/*
+# Debian/Ubuntu-based systems
+/var/cache/apt/archives/*
 
 # Stuff in home directories
 /home/*/.cache/*
 /home/*/.local/share/gvfs-metadata/*
 /home/*/.local/share/Trash/*
+/home/*/restic/recovery/*
 /home/*/Downloads/*
 /home/*/Videos/*
 /home/*/Music/*
@@ -57,6 +63,20 @@ Thumbs.db
 node-modules
 .npm
 
+# Electron Apps
+.config/**/blob_storage
+.config/**/Application Cache
+.config/**/Cache
+.config/**/CachedData
+.config/**/Code Cache
+.config/**/GPUCache
+.config/**/Service Worker/CacheStorage
+
+# VS Codium
+.config/VSCodium/CachedExtensionVSIXs
+.config/VSCodium/logs
+.vscode-oss/extensions/*
+
 # NOTE:
 # Patterns are tested against the FULL PATH, even if restic is passed a relative path to save.
 # A leading slash / anchors the pattern at the root directory.
@@ -69,4 +89,6 @@ node-modules
 # /foo      excludes /foo and everything within /foo
 # /foo/*    includes /foo but nothing within /foo - in the backup, /foo is emtpy directory.
 # !/foo/bar includes /foo/bar even though we excluded /foo/* above
+# bar/*/foo  exclude bar/somedir/foo but not bar/somedir/anotherdir/foo
+# bar/**/foo exclude bar/one_or_more_subdirs/foo     
 ```

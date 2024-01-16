@@ -58,6 +58,38 @@ ssh -t user@host sudo /usr/bin/x11vnc -quiet -xkb -auth guess -noxdamage -displa
 ```
 Connect with vnc client such as Remmina. x11vnc should exit when Remmina disconnects.
 
+## x11vnc on Raspberry Pi OS
+The default ssh server doesn't work with remmina. it's easier to just use x11vnc
+- run `sudo raspi-config` and disable the vnc server.
+- install x11vnc: `sudo apt install x11vnc`
+
+### If pi is set to autologon to the Desktop
+- run `x11vnc -usepw -forever`
+- it asks for password, do what it says, save the password where it wants.
+- the vnc server should be running, test it with remmina on another machine. 
+- you can start x11vnc automatically at boot by adding a .desktop file to the user's autostart directory.
+
+```bash
+cd ~/.config
+[ -d autostart ] || mkdir autostart
+cd autostart
+nano x11vnc.desktop
+```
+Put this:
+```
+[Desktop Entry]
+Type = Application
+Name = x11vnc
+Exec = x11vnc -usepw -forever
+StartupNotify = false
+```
+### If the pi is NOT set to autologon
+configure the systemd service as above.
+
+### If the pi runs headless
+- the display size will be tiny.
+- run `sudo raspi-config` ... under "Display Options" ... "VNC Resolution".
+
 ## x11vnc with novnc (untested)
 
 /etc/systemd/system/x11vnc.service

@@ -44,14 +44,18 @@ Example: enp2s0 means: "**e**ther**n**et, **P**CI bus **2**, **s**lot **0**".
 
 To get the old-style "eth0" and "wlan0" back:
 
-```md title=/etc/default/grub
+```bash
+sudo nano /etc/default/grub
 GRUB_CMDLINE_LINUX="net.ifnames=0 biosdevname=0"
 
 # Generate new grub.cfg file
 sudo grub-mkconfig -o /boot/grub/grub.cfg
+
+# NOTE: biosdevname is specific to Dell hardware, so it's probably not needed.
+# but including it doesn't seem to be a problem on non-Dell hardware
 ```
 ## Additional IP address(es) on an interface
-```
+```bash
 sudo ip address add 192.168.1.2/24 dev eth0
 ```
 
@@ -62,6 +66,7 @@ sudo ip address add 192.168.1.2/24 dev eth0
 - DNS: systemd-resolved
 - /etc/resolv.conf: nameserver 127.0.0.53
 - actual nameservers in use: `resolvectl status`
+- Raspberry Pi OS does not use netplan or systemd-resolved
 
 ## Arch-Based systems
 - NetworkManager with no plugins

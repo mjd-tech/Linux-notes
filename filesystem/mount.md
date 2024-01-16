@@ -3,9 +3,9 @@ Different "filesystems" can be "mounted" into directories.
 
 ## Examples
 
-Examples. replace /dev/sda with actual device or UUID
+Examples. (replace /dev/sda with actual device or UUID)
 
-```
+```bash
 # mount will guess the filesystem type by default
 sudo mount /dev/sda1 /mnt
 
@@ -31,7 +31,7 @@ USB drives get auto-mounted in a Desktop system, but you have to be logged into 
 - To mount a USB drive automatically at boot, you need to edit `/etc/fstab`
 - If the USB drive is NTFS, make sure you have the **ntfs-3g** package installed.
 
-```
+```bash
 # Create a mount point.
 sudo mkdir /mnt/usb1
 
@@ -41,7 +41,7 @@ lsblk -f
 # Edit /etc/fstab as root
 UUID=paste-uuid-here  /mnt/usb1  auto  defaults,noatime,nofail,x-systemd.device-timeout=15 0 2
 
-# OR mount by LABEL.  can use e2label /dev/whatever label-here)
+# OR mount by LABEL.  can use e2label /dev/whatever label-here
 LABEL=label-here  /mnt/usb1  auto  defaults,noatime,nofail,x-systemd.device-timeout=15 0 2
 # mount it
 
@@ -70,7 +70,7 @@ Note:
 
 **Warning:** Back up fstab before editing.
 
-| Field       | Description                                                                                                                                |
+| Field       | Description                                                    |
 |-------------|----------------------------------------------------------------|
 | device      | The device/partition (by /dev location or UUID)                |
 | mount point | use "swap" for swap file/partition. Avoid spaces in pathnames. |
@@ -98,28 +98,30 @@ Ways to specify device:
 
 ### Mount point
 
-On desktop systems, USB drives are mounted in `/run/media/username/drive_id`, 
+On desktop systems, USB drives are mounted by the "udisks2" utility.
+The mountpoint is one of the following:
+- `/run/media/username/drive_id` (Arch/Manjaro/Fedora)
+- `/media/username/drive_id` (Debian/Ubuntu)
 where drive_id is a LABEL or UUID.
-Previously, the mount point was under `/media`, but not lately.
 
-`/mnt` is the "official" place to mount stuff.
 
-Typically you create a directory under /mnt
+`/mnt` is the "official" place to mount stuff that isn't auto-mounted.
+
+Typically you create a directory under /mnt and mount stuff there.
 
 
 ### File System Type
 
-You may either use `auto` or specify a file system. Auto will attempt to
-automatically detect the file system of the target file system and in
-general works well. In general auto is used for removable devices and a
-specific file system or network protocol for network shares.
+Typically `auto` is used for removable devices, such as USB drives.
+Otherwise, the file system is specified for "internal" devices (hard disk drives, SSDs, etc), and "network" devices (NFS,Samba, SSHfs)
 
 Examples:
 
 - auto - auto detect file system
 - vfat - used for FAT partitions.
 - ntfs, ntfs-3g - used for ntfs partitions.
-- btrfs, ext4, etc.
+- btrfs, ext4, - Linux native partitions.
+- nfs, sshfs, cifs - network shares
 - udf,iso9660 - for CD/DVD
 - swap
 
