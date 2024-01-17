@@ -19,9 +19,9 @@ backup_host=CHANGEME
 set -o pipefail
 
 # restic variables
-source "~/restic/restic-env.sh"
-log_file="~/restic/backup.log"
-excludes="~/restic/excludes.txt"
+source "$HOME/restic/restic-env.sh"
+log_file="$HOME/restic/backup.log"
+excludes="$HOME/restic/excludes.txt"
 
 # Functions used in this script.
 LogIt () { echo "$@" | tee -a "$log_file"; }
