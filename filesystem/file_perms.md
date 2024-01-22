@@ -3,13 +3,13 @@ owner, group, permissions (read, write, execute), SUID, SGID, Sticky Bit.
 
 ## owner, group
 Every file on a Linux system, including directories, is "owned" by a
-specific **user** and **group**. Permissions are defined separately for
+specific **user** and **group**. Access Permissions are defined separately for
 user, group, and other.
 
 - All users are members of a "primary group" (usually same name as username)
 - By default, the user who creates a file or directory will become its owner.
 - and the user's "primary group" becomes the group owner.
-- "other" is a user who isn't the owner of the file and isn't a member of the group that owns the file.                                                                                                                                                                |user accounts on the system that are not user or group
+- "other" is a user who isn't the owner of the file and isn't a member of the group that owns the file.
 
 ## ls -l output
 
@@ -41,7 +41,7 @@ user, group, and other.
     T   Sticky Bit, execute
 
 - the 11th character will be a plus sign + if the file has an ACL (Access Control List)
-- rarely seen on desktop systems
+- ACLs are rarely seen on desktop systems
 
 ## File vs Directory Permissions
 
@@ -73,7 +73,7 @@ Example: sales directory. owner=root, group-owner=sales, and SGID set. Octal Per
 - can be used in a NAS-style SGID directory, other users cannot delete your files.
 
 ## Symbolic vs Octal
-- permissions are stored in 12 bits
+- permissions are stored in 12 bits. (But see note below about gui file managers)
 - can be represented by characters (symbolic), ie. `ls -l`
 - can be represented by 3 or 4 Octal digits (Octal digits are 3 bits)
 
@@ -85,11 +85,25 @@ SUID SGID "Sticky Bit"  r w x  r w x  r w x
 
 ```
 ### Display Octal Permissions
+- octal "digits" represent 3 bits, so the range is 0-7
 - `ls -l` does not display octal
 - `stat somefile` shows both octal and symbolic (and other stuff)
 - `stat -c '%n %a' somefile` shows only filename and octal
 - `exa -l --octal-permissions somefile` shows both octal and symbolic. Note: exa usually not installed by default
 - `exa -l --octal-permissions --no-permissions --somefile` shows only octal
+
+#### Gui File Managers
+Most gui file managers have an option to show octal permissions.
+However you may see more than 4 octal digits. Example:
+- files: 100644 
+- directories: 40755 (it's actually 040775 but the leading 0 is not displayed)
+Well, there are actually 16 bits involved. 
+- The leftmost 4 bits represent the "type" of file. i.e. regular file or directory
+
+On a Desktop Linux system 99% of the time,
+- you are only concerned with the **Rightmost 3 digits** and you can **ignore** the rest.
+- the 4th digit from the right will almost always be 0
+- the 5th and 6th digit, represent whether it's a file or a directory, which you already know because the file manager shows directories as "folders" 
 
 ### Common Octal Permissions
 
@@ -109,7 +123,7 @@ Files:
 ```
 
 ## Changing Permissions
-- use the `chmod` command, accepts symbolic or octal permissions
+- use the `chmod` command, accepts **symbolic** or **octal** permissions
 - symbolic - can change one permission bit at a time, while leaving other bits alone.
 - symbolic - best way to set/unset SGID and Sticky bit. (You should never need to mess with SUID)
 - octal - don't use to set/unset SGID or Sticky bit, use symbolic
