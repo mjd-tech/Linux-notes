@@ -86,13 +86,13 @@ LogIt "OK"
 ## Installed Packages - Debian/Ubuntu
 LogIt
 LogIt "Getting list of all installed packages..."
-dpkg --get-selections > "~/restic/all-packages.txt" || exit 1
+dpkg --get-selections > "$HOME/restic/all-packages.txt" || exit 1
 LogIt "OK"
 LogIt "Getting list of manually installed packages..."
 comm -23 <(apt-mark showmanual | sort -u) \
          <(gzip -dc /var/log/installer/initial-status.gz \
              | sed -n 's/^Package: //p' | sort -u) \
-         > "~/restic/my-packages.txt" || exit 1
+         > "$HOME/restic/my-packages.txt" || exit 1
 LogIt "OK"
 ```
 
@@ -101,9 +101,16 @@ LogIt "OK"
 ## Installed Packages - Arch/Manjaro
 LogIt
 LogIt "Getting list of explicitly installed packages..."
-pacman -Qqen > "~/restic/pkglist.txt" || exit 1
-pacman -Qqem > "~/restic/pkglist_aur.txt" || exit 1
+pacman -Qqen > "$HOME/restic/pkglist.txt" || exit 1
+pacman -Qqem > "$HOME/restic/pkglist_aur.txt" || exit 1
 LogIt "OK"
+```
+### Flatpaks
+```
+## Flatpaks
+LogIt
+LogIt "Getting list of Flatpaks..."
+flatpack list --app > "$HOME/restic/flatpaks.txt" || exit 1
 ```
 
 ### dconf database
@@ -111,7 +118,7 @@ LogIt "OK"
 ## Dump dconf database to text file
 LogIt
 LogIt "Dumping dconf database to text file..."
-dconf dump / > "~/restic/dconf_settings.txt" || exit 1
+dconf dump / > "$HOME/restic/dconf_settings.txt" || exit 1
 LogIt "OK"
 ```
 
