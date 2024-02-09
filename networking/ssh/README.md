@@ -388,7 +388,6 @@ ssh -o PubkeyAcceptedKeyTypes=ssh-rsa ...blah-blah...
 - SHA-1 is insecure, OpenSSH disables ssh-rsa _signature algorithm_ since version 8.8.
 - SSH clients and servers are now expected to use rsa-sha2-256 or rsa-sha2-512
 
-
 ### Problem 3 old ssh servers with unsupported key exchange and cipher types
 
 you may encounter the following errors:
@@ -423,4 +422,9 @@ add the following lines to `~/.ssh/config`
     Host *.example.org
     KexAlgorithms diffie-hellman-group1-sha1,diffie-hellman-group-exchange-sha1,diffie-hellman-group14-sha1
     Ciphers aes128-cbc,3des-cbc,aes192-cbc,aes256-cbc
+
+### Get public keys from remote ssh server:
+```
+ssh-keyscan user@remotehost
+```
 
