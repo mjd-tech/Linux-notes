@@ -31,7 +31,7 @@ and you lose your setcap settings.
 
 Ubuntu:
 - create `/etc/apt/apt.conf.d/50restic-setcap`
-- Put this: `DPkg::Post-Invoke { "/usr/bin/setcap cap_dac_read_search=+ep /usr/bin/restic"; }`
+- Put this: `DPkg::Post-Invoke { "/usr/sbin/setcap cap_dac_read_search=+ep /usr/bin/restic"; }`
 
 Arch/Manjaro:
 - create `/etc/pacman.d/hooks/50-restic-setcap.hook`
