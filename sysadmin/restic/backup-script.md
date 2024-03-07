@@ -110,7 +110,7 @@ LogIt "OK"
 ## Flatpaks
 LogIt
 LogIt "Getting list of Flatpaks..."
-flatpack list --app > "$HOME/restic/flatpaks.txt" || exit 1
+flatpak list --app > "$HOME/restic/flatpaks.txt" || exit 1
 ```
 
 ### dconf database
