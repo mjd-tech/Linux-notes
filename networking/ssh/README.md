@@ -82,14 +82,6 @@ ssh-keygen -f ~/.ssh/id_rsa -c
 > - Ed25519 public keys are smaller and more secure than rsa keys
 > - Ed25519 keys are supported since OpenSSH version 6.5 (January 2014)
 
-#### SSH for Github
-Github requires either ed22519 or rsa 4096
-```bash
-ssh-keygen -t ed25519 -f github -C "your_email@example.com"
-# or
-ssh-keygen -t rsa -f github -b 4096 -C "your_email@example.com"
-```
-
 ### Step 2: Copy public key to remote-host using ssh-copy-id
 ```bash
 # When prompted, enter the password for the user on the remote host 
@@ -100,6 +92,21 @@ ssh-copy-id -i my-remote-host
 
 ```bash
 ssh my-remote-host
+```
+
+### SSH for Github
+Github requires either ed22519 or rsa 4096
+```bash
+ssh-keygen -t ed25519 -f github -C "your_email@example.com"
+# or
+ssh-keygen -t rsa -f github -b 4096 -C "your_email@example.com"
+```
+Put this in `~/.ssh/config`
+```
+# Github
+Host        github.com
+HostName    github.com
+IdentityFile ~/.ssh/github
 ```
 
 ## XWindows over SSH
