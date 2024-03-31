@@ -11,7 +11,7 @@ You need the FULL PATH for the restic config
 - ssh shared-key authentication (passwordless) to the NAS
 - NAS defined in `/etc/hosts` and `~/.ssh/config`
 - In `/etc/fuse.conf`, Uncomment `user_allow_other`
-- Create restic directory. `mkdir -p ~/restic{docs,recovery}`
+- Create restic directory. `mkdir -p ~/restic{recovery}`
 
 # Installation
 - Ubuntu 22.04: Package in repo is out of date. Use package from Debian Sid.
@@ -51,16 +51,15 @@ Exec = /usr/bin/setcap cap_dac_read_search=+ep /usr/bin/restic
 ```
 
 ## Initialize the restic "Repository"
-
 ```
 restic -r sftp:mynas:/full/path/to/backup/directory init
 # It asks for a password: Give it one. Remember it.
 ```
 
 ## Environment variables
-create `~/restic/restic-env.sh`
+create `~/restic/vars.sh`
 
-```
+```bash
 export RESTIC_REPOSITORY=sftp:mynas:/full/path/to/restic/repository/
 export RESTIC_PASSWORD=password
 ```
@@ -68,7 +67,7 @@ export RESTIC_PASSWORD=password
 Put the following in your .bashrc and/or .zshrc.
 ```
 # restic environment variables
-source "$HOME/restic/restic-env.sh"
+source "$HOME/restic/vars.sh"
 ```
 Also put this in any shell scripts you create for restic.
 
@@ -83,4 +82,3 @@ restic backup --dry-run /etc
 - excludes file
 - cron
 - recovery
-

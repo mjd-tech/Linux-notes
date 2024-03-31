@@ -59,20 +59,44 @@ ssh -fN -L 3306:localhost:3306 remotehost
 
 It's recommended to add the remote host to your ~/.ssh/config file.
 
-Step 1: Create public and private keys on local host
+### Step 1: Create public and private keys on local host
 
 ```bash
 # Just hit Enter to respond to all questions.
 ssh-keygen
 ```
+This generates:
+- `~/.ssh/id_rsa` (private key)
+- `~/.ssh/id_rsa.pub` (public key)
 
-Step 2: Copy your public key to remote-host using ssh-copy-id
+By default, keys have a "comment" initialized to "user@host"
+
+To change the comment:
+```bash
+ssh-keygen -f ~/.ssh/id_rsa -c
+```
+
+> 📝 Note:  
+> Starting with OpenSSH 9.5/9.5p1 (2023-10-04):
+> - ssh-keygen generates Ed25519 keys by default.
+> - Ed25519 public keys are smaller and more secure than rsa keys
+> - Ed25519 keys are supported since OpenSSH version 6.5 (January 2014)
+
+#### SSH for Github
+Github requires either ed22519 or rsa 4096
+```bash
+ssh-keygen -t ed25519 -f github -C "your_email@example.com"
+# or
+ssh-keygen -t rsa -f github -b 4096 -C "your_email@example.com"
+```
+
+### Step 2: Copy public key to remote-host using ssh-copy-id
 ```bash
 # When prompted, enter the password for the user on the remote host 
 ssh-copy-id -i my-remote-host
 ```
 
-Step 3: See if it works
+### Step 3: See if it works
 
 ```bash
 ssh my-remote-host
@@ -92,7 +116,7 @@ Make sure the following are set on the server side:
 ## Port Forwarding (Tunnelling)
 
 Example: Connect to MySQL via ssh tunnel
-```
+```bash
 ssh -fN -L 3306:localhost:3306 user@ssh_gateway
 user@ssh_gateway's password: ******
 
@@ -109,7 +133,7 @@ The *localhost* in 3306:localhost:3306 is from the perspective of the
 ssh_gateway, i.e. itself.
 
 If running MySQL locally on port 3306, use a different port for the tunnel:
-```
+```bash
 ssh -fN -L 33306:localhost:3306 user@ssh_gateway
 user@ssh_gateway's password: ******
 
@@ -134,13 +158,14 @@ If MySQL is on a different host than ssh_gateway
 remote_db_server must be resolvable from the ssh_gateway's perspective.
 
 ### Remove ssh tunnel
-A tunnel created with -f (background) will remain until you manually kill the ssh process
-that launched the tunnel. 
+A tunnel created with -f (background) will remain until you manually kill the ssh process that launched the tunnel. 
 
 Use this trick to create a temporary tunnel, that goes away when you are through using it.
 
-    ssh -f -L 3306:localhost:3306 ssh_gateway sleep 30
-    mysql -u root -h 127.0.0.1 -P 3306
+```bash
+ssh -f -L 3306:localhost:3306 ssh_gateway sleep 30
+mysql -u root -h 127.0.0.1 -P 3306
+```
 
 You have 30 seconds to launch the mysql command. Otherwise the tunnel goes away.
 Once you launch mysql, the tunnel remains until you exit mysql.

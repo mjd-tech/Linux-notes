@@ -12,16 +12,19 @@
 #!/bin/bash
 # Backup script for restic
 
-# hostname of your NAS, should be in your /etc/hosts
+# shellcheck disable=2120,2016
+
+########## VARIABLES
 backup_host=CHANGEME
+
+script_dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
+source "$script_dir/vars.sh"
+log_file="$script_dir/backup.log"
+excludes="$script_dir/excludes.txt"
+########## END VARIABLES
 
 # Bash - set exit code to non-zero if any command in pipeline fails
 set -o pipefail
-
-# restic variables
-source "$HOME/restic/restic-env.sh"
-log_file="$HOME/restic/backup.log"
-excludes="$HOME/restic/excludes.txt"
 
 # Functions used in this script.
 LogIt () { echo "$@" | tee -a "$log_file"; }
@@ -64,7 +67,7 @@ LogIt "OK"
 ## Optional code
 
 ### Wake up network connection
-```
+```bash
 ## Wake up network connection if needed. Useful for wifi connections
 net_connection="CHANGEME"       # Network Manager connection name
 LogIt "Checking Network connection: $net_connection ..."
@@ -82,7 +85,7 @@ fi
 LogIt "OK"
 ```
 ### Installed Packages - Debian/Ubuntu
-```
+```bash
 ## Installed Packages - Debian/Ubuntu
 LogIt
 LogIt "Getting list of all installed packages..."
@@ -92,33 +95,33 @@ LogIt "Getting list of manually installed packages..."
 comm -23 <(apt-mark showmanual | sort -u) \
          <(gzip -dc /var/log/installer/initial-status.gz \
              | sed -n 's/^Package: //p' | sort -u) \
-         > "$HOME/restic/my-packages.txt" || exit 1
+         > "$script_dir/my-packages.txt" || exit 1
 LogIt "OK"
 ```
 
 ### Installed Packages - Arch/Manjaro
-```
+```bash
 ## Installed Packages - Arch/Manjaro
 LogIt
 LogIt "Getting list of explicitly installed packages..."
-pacman -Qqen > "$HOME/restic/pkglist.txt" || exit 1
-pacman -Qqem > "$HOME/restic/pkglist_aur.txt" || exit 1
+pacman -Qqen > "$script_dir/pkglist.txt" || exit 1
+pacman -Qqem > "$$script_dir/pkglist_aur.txt" || exit 1
 LogIt "OK"
 ```
 ### Flatpaks
-```
+```bash
 ## Flatpaks
 LogIt
 LogIt "Getting list of Flatpaks..."
-flatpak list --app > "$HOME/restic/flatpaks.txt" || exit 1
+flatpak list --app > "$script_dir/flatpaks.txt" || exit 1
 ```
 
 ### dconf database
-```
+```bash
 ## Dump dconf database to text file
 LogIt
 LogIt "Dumping dconf database to text file..."
-dconf dump / > "$HOME/restic/dconf_settings.txt" || exit 1
+dconf dump / > "$script_dir/dconf_settings.txt" || exit 1
 LogIt "OK"
 ```
 
@@ -145,7 +148,7 @@ To avoid having the password in clear text, use base64 encoding.
 - if you change your password, need to re-generate the "hash" file
 
 Some sudo commands:
-```
+```bash
 # Clean apt cache
 LogIt
 LogIt "Cleaning apt cache"
