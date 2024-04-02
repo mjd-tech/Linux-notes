@@ -20,16 +20,16 @@ typical rsync command used in "rotating snapshots"
 
 ## Review of Hard Links
 
-- Linux systems store files as *inodes*, which are numbers, not names.
-- Inodes store file *attributes* (size, date, permissions, etc) and
-  *pointers* to the actual file contents.
-- Inodes do NOT store file *names* or *content*.
-- A *directory* is a special inode. It has a list that maps (or "links")
-  *names* to *inodes*.
+- Linux systems store files as _inodes_, which are numbers, not names.
+- Inodes store file _attributes_ (size, date, permissions, etc) and
+  _pointers_ to the actual file contents.
+- Inodes do NOT store file _names_ or _content_.
+- A _directory_ is a special inode. It has a list that maps (or "links")
+  _names_ to _inodes_.
 - Each file has at least one "link".
-- If you *copy* a file to a different directory, you create a new inode,
+- If you _copy_ a file to a different directory, you create a new inode,
   and a copy of file contents, using more disk space.
-- If you *hard link* a file to a different directory, you do NOT create
+- If you _hard link_ a file to a different directory, you do NOT create
   a new inode, or use more disk space.
 - When you delete a file, you actually "unlink" the inode from the
   directory.
@@ -66,16 +66,16 @@ command figure out what is "yesterday":
   If it is the same, it does not.
 
 In a "rotating snapshot" scenario, the "target" is going to be empty. We
-need to evaluate against the *previous* backup, so we don't end up
+need to evaluate against the _previous_ backup, so we don't end up
 copying the whole directory tree when only a few files have actually
 changed.
 
 The --link-dest option instructs rsync to evaluate against a different
 file structure.
 
-- Unchanged files are *hard linked* from the link-dest directory to the
+- Unchanged files are _hard linked_ from the link-dest directory to the
   target directory. No new inodes created.
-- Changed files get *copied* to target, new inodes created.
+- Changed files get _copied_ to target, new inodes created.
 - If --deleted is used, deleted files (on the source) do not get copied
   or hard linked to the target directory. No new inodes created.
 
