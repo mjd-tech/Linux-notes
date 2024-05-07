@@ -11,7 +11,7 @@ You need the FULL PATH for the restic config
 - ssh shared-key authentication (passwordless) to the NAS
 - NAS defined in `/etc/hosts` and `~/.ssh/config`
 - In `/etc/fuse.conf`, Uncomment `user_allow_other`
-- Create restic directory. `mkdir -p ~/restic{recovery}`
+- Create restic directory. `mkdir -p ~/restic/recovery`
 
 # Installation
 - Ubuntu 22.04: Package in repo is out of date. Use package from Debian Sid.

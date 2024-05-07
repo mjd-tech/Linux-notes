@@ -3,8 +3,7 @@ File Sharing to Windows (and other) systems, using SMB protocol, AKA "Windows Fi
 
 These instructions intended for a **single user** Linux **Desktop** system.
 
-> :warning: For Linux to Linux file sharing, Prefer **SSH/SFTP** over Samba
-
+> 📝 **Note:** For Linux to Linux file sharing, Prefer **SSH/SFTP** over Samba
 
 ## Share types
 1. Guest - Anyone can get to it without username/password.

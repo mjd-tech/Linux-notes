@@ -14,21 +14,25 @@
 
 # shellcheck disable=2120,2016
 
-########## VARIABLES
-backup_host=CHANGEME
+########## USER DEFINED VARIABLES
+# wifi connection
+# wifi_ssid="CHANGEME"
+
+# the directory to be backed up
+the_dir="/"
+########## END USER DEFINED VARIABLES
 
 script_dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 source "$script_dir/vars.sh"
 log_file="$script_dir/backup.log"
 excludes="$script_dir/excludes.txt"
-########## END VARIABLES
 
 # Bash - set exit code to non-zero if any command in pipeline fails
 set -o pipefail
 
 # Functions used in this script.
 LogIt () { echo "$@" | tee -a "$log_file"; }
-PingIt () { ping -qc 3 "$backup_host" &>/dev/null; }
+CheckSsh () { host=${RESTIC_REPOSITORY%:*}; host=${host#*:}; ssh "$host" true; }
 
 # Truncate log file
 tmp=$(tail -n 200 "$log_file" 2>/dev/null) && echo "$tmp" > "$log_file"
@@ -41,14 +45,14 @@ LogIt "======================== $(date '+%D %r') ========================"
 
 ### End optional code
 
-# Make sure we can ping the remote host before attempting backup
-PingIt || { LogIt "ping $backup_host FAILED"; exit 1; }
+# Make sure we can ssh to the remote host before attempting backup
+CheckSsh || { LogIt "ssh to $host FAILED"; exit 1; }
 
 # Do the backup
 LogIt
 LogIt "Running backup..."
-restic backup --exclude-file="$excludes" / |& tee -a "$log_file" || {
-    LogIt "Backup failed"
+restic backup --exclude-file="$excludes" "$the_dir" |& tee -a "$log_file" || {
+    LogIt "Backup FAILED"
     exit 1
 }
 LogIt "OK"
@@ -57,9 +61,9 @@ LogIt "OK"
 LogIt
 LogIt "Removing old snapshots..."
 restic forget \
-    --keep-daily 7 --keep-weekly 4 --keep-monthly 12 \
-    --prune |& tee -a "$log_file" || {
-    LogIt "Removing old snapshots failed"
+    --keep-daily 7 --keep-weekly 4 --keep-monthly 12 --prune \
+    |& tee -a "$log_file" || {
+    LogIt "Removing old snapshots FAILED"
     exit 1
 }
 LogIt "OK"
@@ -68,21 +72,21 @@ LogIt "OK"
 
 ### Wake up network connection
 ```bash
-## Wake up network connection if needed. Useful for wifi connections
-net_connection="CHANGEME"       # Network Manager connection name
-LogIt "Checking Network connection: $net_connection ..."
+## Wake up wifi connection if needed.
+LogIt "Checking wifi connection..."
 
-if ! PingIt; then
-    nmcli con up "$net_connection" || {
-        LogIt "Network connection: $net_connection FAILED"
+if ! CheckSsh; then
+    nmcli con up "$wifi_ssid" || {
+        LogIt "wifi connection to $wifi_ssid FAILED"
         exit 1
     }
     sleep 3
-    # try again
-    PingIt || { LogIt "ping $backup_host FAILED"; exit 1; }
+    # final attempt
+    CheckSsh || { LogIt "ssh to $host FAILED"; exit 1; }
     sleep 3
 fi
 LogIt "OK"
+
 ```
 ### Installed Packages - Debian/Ubuntu
 ```bash

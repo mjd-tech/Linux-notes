@@ -16,25 +16,25 @@ Recursively Locate files that meet certain criteria, such as name, size, age, an
 
 Here are some of the most useful search criteria options:
 
-| Option                 | Explanation                                                                          |
-|----------------------  |--------------------------------------------------------------------------------------|
-| `-name 'pattern'`      | Uses "shell" patterns. Cannot include slashes / in the pattern                       |
-| `\! -name 'pattern'`   | Files that DON'T match 'pattern' (must escape the !)                                 |
-| `-not -name 'pattern'` | Same as above. Can use either `\!` or `-not` to negate a search criteria             |
-| `-iname 'pattern'`     | Same, case-insensitive.                                                              |
-| `-regex 'pattern'`     | Use regex instead of shell pattern                                                   |
-| `-type filetype`       | Files of a specific type, normally -type f (regular files) or -type d (directories)  |
-| `-size +4G`            | larger than 4 Gibibytes  (1024 based)                                                |
-| `-size -1k`            | smaller than 1 Kibibytes (1024 based)                                                |
-| `-mtime 0`             | modified within past 24 hours                                                        |
-| `-mtime -7`            | modified within past 7 days                                                          |
-| `-mtime +30`           | modified 30 or more days ago                                                         |
-| `-mmin -10`            | modified within past 10 minutes                                                      |
-| `-user uname`          | owned by user. uname can be username (fred) or user id number (1000)                 |
-| `-group gname`         | owned by group. gname can be groupname (fred) or group id number (1000)              |
-| `-perm mode`           | EXACTLY match mode. eg. -perm 664                                                    |
-| `-perm -mode`          | match AT LEAST mode. eg. -perm -664 also matches 777                                 |
-| `-perm /mode`          | match BITS in mode. eg. -perm /220 writable by either owner or group                 |
+| Option                 | Explanation                                                                         |
+| ---------------------- | ----------------------------------------------------------------------------------- |
+| `-name 'pattern'`      | Uses "shell" patterns. Cannot include slashes / in the pattern                      |
+| `\! -name 'pattern'`   | Files that DON'T match 'pattern' (must escape the !)                                |
+| `-not -name 'pattern'` | Same as above. Can use either `\!` or `-not` to negate a search criteria            |
+| `-iname 'pattern'`     | Same, case-insensitive.                                                             |
+| `-regex 'pattern'`     | Use regex instead of shell pattern                                                  |
+| `-type filetype`       | Files of a specific type, normally -type f (regular files) or -type d (directories) |
+| `-size +4G`            | larger than 4 Gibibytes  (1024 based)                                               |
+| `-size -1k`            | smaller than 1 Kibibytes (1024 based)                                               |
+| `-mtime 0`             | modified within past 24 hours                                                       |
+| `-mtime -7`            | modified within past 7 days                                                         |
+| `-mtime +30`           | modified 30 or more days ago                                                        |
+| `-mmin -10`            | modified within past 10 minutes                                                     |
+| `-user uname`          | owned by user. uname can be username (fred) or user id number (1000)                |
+| `-group gname`         | owned by group. gname can be groupname (fred) or group id number (1000)             |
+| `-perm mode`           | EXACTLY match mode. eg. -perm 664                                                   |
+| `-perm -mode`          | match AT LEAST mode. eg. -perm -664 also matches 777                                |
+| `-perm /mode`          | match BITS in mode. eg. -perm /220 writable by either owner or group                |
 
 
 File Size suffix:
@@ -47,14 +47,15 @@ File Size suffix:
 
 ## Actions
 
-| Option               | Explanation                                                                          |
-|----------------------|--------------------------------------------------------------------------------------|
-| `-delete`            | deletes files and empty directories                       |
-| `-exec somecmd {} +` | executes command on each item found |
-| `-print`             | This is the default action, but sometimes you need to specify it. |
-| `-print0`            | Use this when piping into `xargs -0` to handle spaces in filenames. |
-| `-printf 'fmt'`      | print things other than full filename, see man page for options |
-| `-prune dir`         | don't process dir. Tricky to use. See below. |
+| Option                | Explanation                                                         |
+| --------------------- | ------------------------------------------------------------------- |
+| `-delete`             | deletes files and empty directories                                 |
+| `-exec somecmd {} \;` | executes command on each item found                                 |
+| `-exec somecmd {} +`  | same as above, emulates piping into xargs                           |
+| `-print`              | This is the default action, but sometimes you need to specify it.   |
+| `-print0`             | Use this when piping into `xargs -0` to handle spaces in filenames. |
+| `-printf 'fmt'`       | print things other than full filename, see man page for options     |
+| `-prune dir`          | don't process dir. Tricky to use. See below.                        |
 
 ### Basic Examples
 
@@ -62,8 +63,8 @@ In Linux, everything is a "file", so it is best to use a modifier such as `-type
 
 Note: Wildcard characters `* ?` Parentheses `()` Bang `!` and semi-colon `;` MUST be escaped from the shell.
 
-|Command                                                    |Explanation                                                                            |
-| ---                                                       | ---                                                                                   |
+| Command                                                   | Explanation                                                                           |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | `find`                                                    | All files in current directory and all subdirectories                                 |
 | `find .`                                                  | Same - preferred syntax                                                               |
 | `find /somedir`                                           | All "files" in the somedir directory and all subdirectories                           |
@@ -84,7 +85,7 @@ Note: Wildcard characters `* ?` Parentheses `()` Bang `!` and semi-colon `;` MUS
 | `find . -type f -size +10000 -exec ls -al {} \;`          | Long list files larger than 10,000 bytes                                              |
 | `find . -empty`                                           | Empty files (zero bytes), mostly lock-files and place holders                         |
 | `find . -newer reference_file`                            | files modified after reference_file was last modified                                 |
-| `find . ! -readable -prune -o -type d -print`             | prevent "Permission denied" errors ie. lost+found                                     |
+| `find . \! -readable -prune -o -type d -print`            | prevent "Permission denied" errors ie. lost+found                                     |
 
 ### Limit Search To Specific Directory Level
 
@@ -93,7 +94,7 @@ directory given on the command line". mindepth and maxdepth must be before other
 criteria such as -name and -type
 
 | Command                                         | Explanation                                |
-|-------------------------------------------------|--------------------------------------------|
+| ----------------------------------------------- | ------------------------------------------ |
 | `find /usr -maxdepth 1 -name "foo"`             | Do not search subdirectories               |
 | `find /usr -mindepth 2 -name "foo"`             | Search subdirectories, but not /usr itself |
 | `find /usr -mindepth 2 -maxdepth 3 -name "foo"` | Search subdirectories, but not below       |
