@@ -6,9 +6,10 @@ Some systems use systemd-boot.
 - If no other operating systems are installed, GRUB 2 will boot directly to Linux.
 - Hold down (right) SHIFT to display the menu during boot. Or, try ESC.
 
-## Set the menu timeout
+## Make menu display and set the timeout
 Edit (as root) `/etc/default/grub`
 ```
+GRUB_TIMEOUT_STYLE=menu
 GRUB_TIMEOUT=5
 ```
 Then,
@@ -34,28 +35,31 @@ Identify the EFI partition, and the Linux system partition
 ```bash
 sudo fdisk -l | grep -Ei 'efi|Linux'
 ```
-Optionally, run these commands for more info
+Identify the filesystem of the Linux system partition
 ```bash
 sudo blkid
+# or
 df -Th
 ```
 
-Mount the Linux system partition.  
-Choose **ONE** of the following
+If you have an **ext4** system partition:
 
-- ext4
 ```bash
-# Mount ext4 system partition:
-sudo mount /dev/sda2 /mnt  # Replace sda2 with your partition name
+# Replace sda2 with your partition name
+sudo mount /dev/sda2 /mnt
 ```
-- btrfs
+If you have a **btrfs** system partition:
+
 ```bash
-# Mount btrfs root subvolume. Replace sda2 with your partition name
+# Replace sda2 with your partition name
 sudo mount /dev/sda2 /mnt/ -t btrfs -o subvol=@
 ```
-Mount EFI partition, replacing sda1 with the actual partition name:
+
+Next, mount the EFI partition:
+
 ```bash
-sudo mount /dev/sda1 /mnt/boot/efi # Replace sda1 with your partition name
+# Replace sda1 with your partition name
+sudo mount /dev/sda1 /mnt/boot/efi
 ```
 Bind mount some other necessary stuff:
 ```bash
@@ -69,21 +73,29 @@ sudo chroot /mnt
 At this point, you're in the installed system, not the live session, and running
 as root, so you don't need sudo for the following commands.
 
-Reinstall and Update grub:
-```bash
-# DO NOT blindly copy/paste this command!!!
+Reinstall grub:
 
+**Note:**
+- Specify a **device** name like **/dev/sda**
+- Do **NOT** specify a partition name like **/dev/sda1**  
+
+```bash
 grub-install /dev/sda  # replace sda with actual device name
-# DO NOT specify a partition number.
+# DO NOT specify a partition name.
 # For example: /dev/sda1 is WRONG!!!
-update-grub
 ```
 
+Now update the grub config
+```bash
+update-grub
+```
 If everything worked without errors, then you're all set:
 
-      # exit chroot
-      exit  # or Ctrl-d
-      sudo reboot
+```bash
+# exit chroot
+exit  # or Ctrl-d
+sudo reboot
+```
 
 At this point, you should be able to boot normally.
 
