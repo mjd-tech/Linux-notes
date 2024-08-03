@@ -131,3 +131,21 @@ lsblk -o PATH,PTTYPE,PARTTYPE,FSTYPE,PARTTYPENAME
 # Verify the efi filesystem is loaded
 ls /sys/firmware/efi
 ```
+## log getting spammed with PCIe errors
+For example:
+```
+PCIe Bus Error: severity=Corrected, type=Physical Layer, id=00e5(Receiver ID)
+```
+Fix it:
+```
+sudo vim /etc/default/grub
+```
+add pcie_aspm=off to GRUB_CMDLINE_LINUX_DEFAULT - something like this:
+
+`GRUB_CMDLINE_LINUX_DEFAULT="quiet splash pcie_aspm=off"`
+
+
+```
+sudo update-grub
+# reboot the system
+```
