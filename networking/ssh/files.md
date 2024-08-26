@@ -121,3 +121,9 @@ For repeated use, consider adding to your ~/.ssh/config
 Server-side file. Lets the server authenticate the user. Holds public
 keys of remote users that are allowed to log into the local user’s
 account without providing a password.
+
+## Permissions
+This is the easiest way:
+- .ssh directory 700
+- all files within 600
+
