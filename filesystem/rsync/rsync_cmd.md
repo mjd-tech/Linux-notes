@@ -39,6 +39,7 @@ rsync has many many options. These are the most common:
 | -x --one-file-system | don't backup things "mounted" into your source                           |
 | --delete             | delete files on destination that are not in the source.                  |
 | --progress           | give a rough idea of the percentage transferred and time remaining       |
+| --info=progress2     | cumulative progress. Do not use with -v or --verbose                     |
 | --partial            | keep partially transferred files, useful for large files on a flaky link |
 | -P                   | shortcut for --partial --progress                                        |
 | -A --acls            | preserve ACLS (Access Control Lists)                                     |
@@ -78,7 +79,7 @@ rsync -avz /src/foo /dest/foo   => not ok, creates /dest/foo/foo
 ## Progress
 Show cumulative progress
 ```bash
-rsync -av --info=progress2 /path/to/src /path/to/dst
+rsync -a --info=progress2 /path/to/src/ /path/to/dst/
 ```
 
 ## Using rsync over ssh
@@ -155,7 +156,11 @@ ssh remotehost mountpoint -q /path/to/usb/mount || exit
 # Put your rsync command(s) below here
 ```
 ## Remote source or destination directory contain spaces
-Spaces cause problems:
+Rsync version **3.2.4** (15 Apr 2022) and later:
+```bash
+rsync -av remotehost:'/path/to/my source/' '/path/to/my destination/'
+```
+Rsync versions earlier than 3.2.4:
 ```bash
 # This will not work, although it looks like it's quoted correctly:
 rsync -av remotehost:"/path/to/my source/" "/path/to/my destination/"
@@ -176,6 +181,20 @@ The easiest way to deal with this put extra quotes on the remotehost path.
 rsync -av remotehost:'"/path/to/my source/"' "/path/to/my destination/"
 ```
 The local shell removes the single quotes and passes the double-quoted path to the remote shell.
+
+## Multiple remote paths
+```bash
+rsync -av remotehost:/path/to/file1 :/path/to/file2 /local/directory/
+```
+
+## Copy directory structure only
+This will copy only the directory tree and not the files within:
+```bash
+rsync -av -f"+ */" -f"- *" /path/to/src /path/to/dest/
+
+# Alternate method
+rsync -av --include='*/' --exclude='*' /path/to/src /path/to/dest/
+```
 
 ## Use a command to generate list of files to copy
 This trick uses rsync's `--files-from=` argument, which expects a filename,  
@@ -210,8 +229,8 @@ rsync --dry-run -av --files-from=<(ssh remotehost 'find /myVideos -iname "*.avi"
 
 A slash after the dir name compared to no slash after the dir name will do 2 totally different things.
 
-**Quoting Issues**
-
+**Quoting Issues**  
+This applies to Rsync versions earlier than **3.2.4** (15 Apr 2022)
 - Anything involving remote hosts is subject to quoting issues.
 - The remote part of the command line is parsed twice.
 - Most problems are solved with the "double quotes inside single quotes" method.
