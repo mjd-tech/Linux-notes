@@ -1,0 +1,151 @@
+#!/bin/bash
+# Tui front-end (fzf) for restic backups
+
+# shellcheck disable=1090,2086,2012,2016
+
+########## USER DEFINED SETTINGS
+term_cmd="gnome-terminal --window --"
+########## END USER DEFINED SETTINGS
+
+Main () {
+    Init
+    # Auto generate the main menu, using Menu Functions
+    menu=$(awk '/^function/ { for (i=4;i<=NF;i++) printf "%s ",$i; printf "\t%s\n",$2 }' "$0")
+    while true; do
+        clear
+        choice=$(fzf --height=50% --delimiter=$'\t' --with-nth=1 --border-label="Main Menu" \
+        --header-first --header="Esc to Quit" <<<"$menu")
+        [[ $choice ]] || return
+        "${choice#*$'\t'}"
+    done
+}
+
+# Menu Functions - these appear in the main menu
+function MountRepo  # Mount restic repository
+{
+    local choice
+    CheckIfMounted
+    SelectRepo; [[ $RESTIC_REPOSITORY ]] || return
+    echo -e "Mounting Repository: ${yel}${repo}${rst}\t$RESTIC_REPOSITORY"
+    { restic mount --allow-other --time-template="2006-01-02 Mon 15:04 PM" \
+        "$mount_dir" >/dev/null & } || Die "restic mount"
+    restic_pid=$!
+    trap 'Cleanup' EXIT
+    LaunchFileMgr || Die "LaunchFileMgr"
+    clear; echo
+    choice=$(echo "Double-Click Here to Unmount and Exit" | fzf  --height=5 \
+        --border-label="IMPORTANT: DO NOT CLOSE THE TERMINAL!!!" )
+    exit
+}
+
+function Jobs  # Jobs
+{
+    local choice
+    choice=$(ls $jobs_dir | fzf --header-first --header="Esc to Return" \
+        --preview="bat -p --color=always $jobs_dir/{}" --preview-window=down,60%)
+    [[ $choice ]] || return
+    xdg-open "$jobs_dir/$choice"
+}
+
+function Schedule  # Schedule
+{
+    local choice
+    choice=$(echo "Edit" | fzf --header-first --header="Esc to Return" \
+        --preview="crontab -l" --preview-window=down,60%)
+    [[ $choice ]] || return
+    $term_cmd crontab -e
+    clear; cat "$docs_dir/cron.txt"
+    Pause "Return to Main Menu"; return
+}
+
+function Cli  # Run restic CLI commands
+{
+    SelectRepo; [[ $RESTIC_REPOSITORY ]] || return
+    echo -e "Repository: ${yel}${repo}${rst}\t$RESTIC_REPOSITORY"
+    echo
+    Pause "launch a new terminal, where you can run restic commands"
+    $term_cmd
+    clear; cat "$docs_dir/cmds.txt"
+    Pause "Return to Main Menu"; return
+}
+
+# Utility Functions - these do not appear in the main menu
+Cleanup () {
+    kill -SIGINT $restic_pid
+    wait
+}
+
+CheckIfMounted () {
+    mountpoint -q "$mount_dir" || return
+    echo -e "A Restic repository is currently mounted at ${yel}$mount_dir${rst}"
+    if YesNo "Unmount the repository?"; then
+        fusermount -u "$mount_dir" || Die "Could not unmount the repository"
+        echo; echo "Repository unmounted OK"
+    else 
+        echo; echo -e "${red}Repository NOT unmounted${rst}"
+    fi
+    Pause "Return to Main Menu"; return
+}
+
+Die () {
+    echo -e "\n${red}ERROR:${rst} ${1:-}" >&2
+    echo -e "\nPress any key to exit..."
+    read -rsn1; exit 1
+}
+
+Init() {
+    # Colors and styles
+    rst='\e[0m'; yel='\e[1;33m'; grn='\e[1;32m'; red='\e[1;31m'
+
+    # housekeeping variables
+    script_dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
+    #script_name="$(basename "$(readlink -f "${BASH_SOURCE[0]}")")"
+    mount_dir="$script_dir/restic-mountpoint/"
+    export repos_dir="$script_dir/repos"
+    export jobs_dir="$script_dir/jobs"
+    export docs_dir="$script_dir/docs"
+    export FZF_DEFAULT_OPTS="--no-info --reverse --border \
+        --border-label-pos=3 --color=label:bright-yellow"
+
+    # Create mount point if needed
+    if ! [[ -d $mount_dir ]]; then
+        mkdir -p "$mount_dir" || Die "Cannot create $mount_dir"
+    fi
+
+    # This script won't work in ssh session
+    [[ $SSH_CLIENT ]] && Die "Can't use this script in ssh session"
+}
+
+LaunchFileMgr () {
+    for (( i=0; i<15; i++ )); do    # wait for repository to mount
+        [[ -d $mount_dir/hosts ]] && break
+        sleep 1
+    done
+    [[ -d $mount_dir/hosts ]] || return 1
+    xdg-open "$mount_dir/hosts"
+}
+
+Pause () {
+    echo -en "\n${grn}Press any key to ${1:-continue}...${rst}"
+    read -rsn1
+    # clear to: end of line, beginning of line; move cursor to beginning of line
+    tput el; tput el1; echo -en "\r"
+}
+
+SelectRepo () {
+    [[ $RESTIC_REPOSITORY ]] && return
+    repo=$( ls "$repos_dir" | fzf --header-first --header="Esc to Return" \
+        --border-label='Choose Restic Repository' \
+        --preview='cat $repos_dir/{}' --preview-window=down,60%)
+    [[ $repo ]] || return
+    source "$repos_dir/$repo"
+}
+
+YesNo () {
+    local choice
+    choice=$(echo -e "Yes\nNo" | fzf --border-label="${1}" --height=6 )
+    [[ $choice == Yes ]]
+}
+
+### Program Starts Here
+Main "$@"

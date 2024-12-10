@@ -1,0 +1,20 @@
+# restic commands
+
+restic snapshots -c                 # Show all snapshots
+restic snapshots -c --host=myhost   # Show snapshots for a host
+restic version                      # Show version
+restic unlock                       # remove stale locks
+restic unlock --remove-all          # Only as a LAST RESORT!!
+restic check                        # check if repo is ok, takes a while
+restic backup ~/Documents           # do manual snapshot of Documents folder
+restic ls -l fb183bbb ~/Documents/  # List Documents in snapshot fb183bbb
+restic forget fb183bbb              # put snapshot fb183bbb in "trash bin"
+restic prune                        # empty "trash bin"
+
+# remove badfile from all snapshots
+restic rewrite --forget -e ~/Documents/badfile    
+# remove badfile only from snapshot fb183bbb
+restic rewrite --forget -e ~/Documents/badfile fb183bbb
+
+# Help: restic help  restic help prune  restic help snapshots  etc.
+# Man pages: man restic man restic-prune man restic-snapshots  etc.

@@ -1,0 +1,2 @@
+export RESTIC_REPOSITORY=sftp:mynas:/full/path/to/restic/repository/
+export RESTIC_PASSWORD=password

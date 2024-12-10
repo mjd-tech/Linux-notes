@@ -1,56 +1,32 @@
-# Excludes file
-
-- Save this in ~/restic/excludes.txt
-- Modify to your needs.
-- When in doubt, use the /full/path
-
-```
 # excludes for restic backup.
 # see bottom of this file for notes and examples
 
 # We want to backup the following directories:
-# /boot /etc /home /opt /root /srv /usr/local /var
-# Rather than specifying these to "restic backup" we specify / (everything)
-# And exclude what we don't want
-
-# Exclude these top level directories
-/bin
-/dev
-/lib
-/lib64
-/media
-/mnt
-/proc
-/run
-/sbin
-/sys
-/tmp
-
-# We want /usr/local but not anything else under /usr
-/usr/*
-!/usr/local
+# /etc $HOME
 
 # this is specific to ext4 file systems
 lost+found
 
-# Exclude PID files and Lock files
-/var/run/*
-/var/lock/*
-
-# Cached packages
-# Arch Linux-based systems
-/var/cache/pacman/pkg/*
-# Debian/Ubuntu-based systems
-/var/cache/apt/archives/*
-
 # Stuff in home directories
 /home/*/.cache/*
+/home/*/Downloads/*
+#/home/*/Videos/*
+#/home/*/Music/*
 /home/*/.local/share/gvfs-metadata/*
 /home/*/.local/share/Trash/*
-/home/*/restic/recovery/*
-/home/*/Downloads/*
-/home/*/Videos/*
-/home/*/Music/*
+/home/*/restic/restic-mountpoint/*
+/home/*/dropbox/*
+
+# Brave Browser
+.config/BraveSoftware/Brave-Browser/*/Feature Engagement Tracker/
+.config/BraveSoftware/Brave-Browser/*/Local Storage/
+.config/BraveSoftware/Brave-Browser/*/Service Worker/CacheStorage/
+.config/BraveSoftware/Brave-Browser/*/Session Storage/
+.config/BraveSoftware/Brave-Browser/Safe Browsing/
+.config/BraveSoftware/Brave-Browser/ShaderCache/
+
+# Flatpaks cache
+/home/*/.var/app/*/cache
 
 # Clutter files from Windows and Mac
 Thumbs.db
@@ -90,5 +66,4 @@ node-modules
 # /foo/*    includes /foo but nothing within /foo - in the backup, /foo is emtpy directory.
 # !/foo/bar includes /foo/bar even though we excluded /foo/* above
 # bar/*/foo  exclude bar/somedir/foo but not bar/somedir/anotherdir/foo
-# bar/**/foo exclude bar/one_or_more_subdirs/foo     
-```
+# bar/**/foo exclude bar/one_or_more_subdirs/foo

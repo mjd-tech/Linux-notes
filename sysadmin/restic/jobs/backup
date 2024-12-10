@@ -1,0 +1,60 @@
+#!/bin/bash
+# restic backup script
+
+# shellcheck disable=1090
+
+########## USER DEFINED SETTINGS
+# Set the restic repository to use
+repo=myrepo
+
+# directories to be backed up
+dirs=("/etc" "$HOME")
+########## END USER DEFINED SETTINGS
+
+Main () {
+    Init
+    StartLog
+
+    # Run sysinfo script
+    $script_dir/sysinfo; echo
+
+    # Comment this out if restic repo is located on this host
+    CheckSsh || Die "ssh to $host"
+    
+    # Do the backup
+    echo "Backup ${dirs[*]} ..."
+    restic backup --exclude-file="$excludes" "${dirs[@]}" || Die "restic backup"
+    echo "OK"
+}
+
+Init() {
+    # housekeeping variables
+    script_dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
+    script_name="$(basename "$(readlink -f "${BASH_SOURCE[0]}")")"
+    log_file="$script_dir/$script_name.log"
+    excludes="$script_dir/$script_name.excludes"
+    this_host=$(hostname)
+    source "$script_dir/../repos/$repo"
+    # Send all output to both $log_file and stdout
+    exec > >(tee -a -i "$log_file") 2>&1
+}
+
+CheckSsh () { host=${RESTIC_REPOSITORY%:*}; host=${host#*:}; ssh "$host" true; }
+
+StartLog () {
+    # Truncate log file
+    tmp=$(tail -n 200 "$log_file" 2>/dev/null) && echo "$tmp" > "$log_file"
+    # Print today's date and time: ex. 08/11/22 09:39:42 AM
+    { echo
+    echo "============================== $(date '+%D %r') =============================="
+    } >> "$log_file"
+}
+
+Die () {
+    echo -e "ERROR: $this_host: $script_name\n$1" >&2
+    echo -e "Subject: ERROR: $this_host: $script_name\n\n$1" | sendmail "$LOGNAME"
+    exit 1
+}
+
+# Program Starts Here
+Main "$@"

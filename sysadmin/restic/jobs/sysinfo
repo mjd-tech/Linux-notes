@@ -1,0 +1,69 @@
+#!/bin/bash
+# Gather various system information and write to user defined directory
+
+# shellcheck disable=1090
+
+########## USER DEFINED SETTINGS
+# where to put the System Info files this script creates
+sysinfo_dir=$HOME/Documents/0_this_computer
+########## END USER DEFINED SETTINGS
+
+Main () {
+    Init
+        
+    # General System info
+    inxi --tty -Z -Firx -y1 > "$sysinfo_dir/system-info.txt" || Die "inxi"
+    # --tty and -Z are needed when running inxi in a cron job
+    # --tty should be the first option, then -Z, then other options
+    
+    # All Installed Packages
+    dpkg --get-selections > "$sysinfo_dir/packages-all.txt" || Die "dpkg"
+    
+    # Manually Installed Packages
+    comm -23 <(apt-mark showmanual | sort -u) \
+        <(gzip -dc /var/log/installer/initial-status.gz \
+        | sed -n 's/^Package: //p' | sort -u) \
+        > "$sysinfo_dir/packages-my.txt" || Die "manually installed packages"
+    
+    # Flatpaks
+    flatpak list --app --columns=app > "$sysinfo_dir/flatpaks.txt" || Die "flatpaks"
+    
+    # Non Package or Flatpak
+    {   [[ -d $HOME/appimages ]] && { find "$HOME/appimages" -type f -executable -ls; echo; }
+        find /usr/local/bin -user "$LOGNAME" -ls; echo
+        find /opt -maxdepth 1 -type d -user "$LOGNAME" -ls
+    } > "$sysinfo_dir/other-apps.txt" 
+    
+    # Dconf database
+    dconf dump / > "$sysinfo_dir/dconf-settings.txt" || Die "dconf dump"
+    
+    # crontab
+    crontab -l > "$sysinfo_dir/crontab.txt" || Die "crontab -l"
+
+    echo "System Info written to $sysinfo_dir - OK"
+    ls -lh "$sysinfo_dir"
+}
+
+Init() {
+    # Bash - set exit code to non-zero if any command in pipeline fails
+	set -o pipefail
+    
+    # housekeeping variables
+    #script_dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
+    script_name="$(basename "$(readlink -f "${BASH_SOURCE[0]}")")"
+    this_host=$(hostname)
+    
+    # Make sure destination directory exists
+    if [[ ! -d $sysinfo_dir ]]; then
+        mkdir -p "$sysinfo_dir" || Die "mkdir $sysinfo_dir"
+    fi
+}
+
+Die () {
+    echo -e "ERROR: $this_host: $script_name\n$1" >&2
+    echo -e "Subject: ERROR: $this_host: $script_name\n\n$1" | sendmail "$LOGNAME"
+    exit 1
+}
+
+# Program Starts Here
+Main "$@"

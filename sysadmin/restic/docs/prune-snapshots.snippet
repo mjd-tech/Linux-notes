@@ -1,0 +1,15 @@
+#!/bin/bash
+# place this snippet after "restic backup..."
+
+    echo "Removing old snapshots..."
+    restic --quiet unlock
+    restic forget -c --prune \
+        --keep-daily 7 --keep-weekly 4 \
+        --keep-monthly 12 --keep-yearly 100 ||
+            Die "restic forget --prune"
+    echo "OK"
+
+# If multiple hosts backup to single restic repository,
+# this snippet should only run on ONE host.
+# For best performance, run on the host where the restic repo resides.
+# Schedule your backups so the "prune" operation runs AFTER all your hosts have backed up.
