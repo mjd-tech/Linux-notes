@@ -23,6 +23,9 @@ sudo mount --bind /var/www/html  /home/chroot/user/website
 
 # another way
 sudo mount -o bind /var/www/html  /home/chroot/user/website
+
+# mount everything listed in /etc/fstab, that isn't already mounted 
+sudo mount -a
 ```
 
 ## Mount USB drive at boot
@@ -133,7 +136,7 @@ Typical options:
 
     defaults - Equivalent to rw, suid, dev, exec, auto, nouser, async.
     noatime - don't update access time. recommended
-    relatime - only update acess time once a day. This is default, but noatime recommended.
+    relatime - only update access time once a day. This is default, but noatime recommended.
     sync/async - All I/O to the file system should be done (a)synchronously.
     exec/noexec - Permit/Prevent the execution of binaries from the filesystem.
     suid/nosuid - Permit/Block the operation of suid, and sgid bits.
@@ -238,31 +241,43 @@ Mount all file systems in /etc/fstab
 - The mount point is `/run/user/user_id/gvfs/share_name`
 - You can use the gui file manager to mount network drives.
 
-For command line use, use the gfs-mount command:
+Mount a network device from Command line:
+```bash
+# smb - windows file sharing
+gio mount smb://WORKGROUP\;osmc@pi/USBdrive
 
-    gvfs-mount smb://WORKGROUP\;osmc@pi/USBdrive
-    
-    # This creates a mount point of:
-    /run/user/1000/gvfs/smb-share:server=pi,share=usbdrive
+# This creates a mount point of:
+/run/user/1000/gvfs/smb-share:server=pi,share=usbdrive
 
+# sftp mount
+gio mount sftp://host
+# if you specify sftp://host/some/path, it silently ignores /some/path
+
+# NOTE: older systems use the deprecated "gvfs-mount" command
+```
 It also creates an "alias" that can be used in the gui file manager: `smb://pi/usbdrive/`
 
-    # List existing mounts
-    gvfs-mount -l
-    ...
-    Mount(0): usbdrive on pi -> smb://pi/usbdrive/
-    Type: GDaemonMount
+```bash
+# List existing mounts
+gio mount -l
+...
+Mount(0): usbdrive on pi -> smb://pi/usbdrive/
+Type: GDaemonMount
+```
+However, this does not show the mount point.  
+For that, you need to look in the `/run/user/1000/gvfs` directory.
 
-However, this does not show the mount point. For that, you need to look
-in the /run/user/1000/gvfs directory.
+Mounting stuff while in an ssh session:
 
-Note: gvfs-mount does not work correctly in an ssh session. Here's what
-you have to do:
+- gio mount seems to work in an ssh session
+- the older gvfs-mount does not work correctly in an ssh session. Here's what you have to do:
 
-    export $(dbus-launch)
-    /usr/lib/gvfs/gvfsd-fuse ~/.gvfs
-    gvfs-mount smb://pi/USBdrive
-
+```bash
+# only for old systems with gvfs-mount
+export $(dbus-launch)
+/usr/lib/gvfs/gvfsd-fuse ~/.gvfs
+gvfs-mount smb://pi/USBdrive
+```
 Notice this uses the ~/.gvfs directory for the mount point. You cannot
 use /run/user/1000/gvfs because you will get "permission denied", even
 if you use sudo. Also, it is very slow to do the mount, for some unknown
