@@ -34,6 +34,31 @@ Linux client:
 - Windows does not allow you to connect to the same host with different credentials.
 - However you can be one user and a guest at the same time.
 
+### Windows 11 version 24H2
+- Microsoft made changes to the smb client process that breaks connectivity with Samba.
+- On Win11 **Pro**: Use group policy editor to make some changes:
+- Open Run: Press Windows Key + R
+- Enter: gpedit.msc
+- Go to `Computer Configuration\Windows Settings\Security Settings\Local Policies\Security Options`
+- Find these two items and set them to **Disabled**
+  1. `Microsoft Network Client: Digitally sign communications (always)`
+  2. `Microsoft Network Client: Digitally sign communications (if server agrees)`
+
+While you're in the group editor you might also want to fix guest share accessibility from Win11:
+- Go to `Computer Configuration\Administrative Templates\Network\Lanman Workstation`
+- Find the item:
+- `Enable insecure guest logons`
+- And set that to **Enabled**
+- Then **reboot your Win11 machine.**
+
+On **Win11 Home**
+- There's no Group Policy Editor but it does have the PowerShell utility.
+- In Win 11 search bar search for powershell then right click > open as administrator.
+- Then run these commands:
+  1. `Set-SmbClientConfiguration -EnableInsecureGuestLogons $true -Force`
+  2. `Set-SmbClientConfiguration -RequireSecuritySignature $false -Force`
+- Then **reboot your Win11 machine.**
+
 ## User accounts
 - Samba maintains its own database of users and passwords.
 - Each Samba user is mapped to a Linux user of the same name.
