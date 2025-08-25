@@ -2,14 +2,23 @@
 When running these, ssh exits with the status of the last remote
 command, or with status 255 if ssh could not execute the remote command.
 
+> 📝 **Note**  
+> These examples assume `remotehost` is defined in your local ~/.ssh/config  
+> Otherwise use `remotehost`
+
 ## Single command
 
 ```bash
-ssh user@remotehost 'cat /etc/hosts'                # OK
-ssh user@remotehost cat /etc/hosts                  # OK - don't need quotes here
-ssh user@remotehost cat 'filename with spaces'      # FAILS
-ssh user@remotehost cat "'filename with spaces'"    # OK - quote the quotes
-ssh user@remotehost cat \'filename with spaces\'    # OK - escape the quotes
+ssh remotehost 'cat /etc/hosts'                # OK
+ssh remotehost cat /etc/hosts                  # OK - don't need quotes here
+ssh remotehost cat 'filename with spaces'      # FAILS
+ssh remotehost cat "'filename with spaces'"    # OK - quote the quotes
+ssh remotehost cat \'filename with spaces\'    # OK - escape the quotes
+
+ssh -t remotehost htop                         # run interactive command
+ssh -t remotehost sudo fdisk -l                # run sudo command
+ssh -t remotehost .local/bin/myscript          # path relative to remote $HOME
+
 ```
 
 > 📝 **Note**  
@@ -18,16 +27,16 @@ ssh user@remotehost cat \'filename with spaces\'    # OK - escape the quotes
 ## Multiple commands
 
 ```bash
-ssh user@remotehost 'pwd; ls'
+ssh remotehost 'pwd; ls'
 # or
-ssh user@remotehost "pwd && ls"
+ssh remotehost "pwd && ls"
 ```
 ## "heredoc" method
 This allows you to execute several commands without cramming it all on one line.
 Can use remote host's environment variables, and specify filenames containing spaces, without additional quoting tricks.
 
 ```bash
-ssh user@remotehost /bin/bash <<'EOF'
+ssh remotehost /bin/bash <<'EOF'
 echo $HOSTNAME
 ls "$HOME/Documents/filename with spaces"
 EOF
@@ -39,11 +48,6 @@ EOF
 > EOF is surrounded by single-quotes, turning off local variable
 > interpolation, $HOSTNAME and $HOME are those on the remote host.
 
-## Run command with sudo
-
-```bash
-ssh -t user@remotehost 'pwd; sudo ls'
-```
 ## Quoting woes
 - remote ssh commands are parsed twice.  First locally, then remotely
 - Parsing removes quotes
@@ -57,33 +61,55 @@ Another way is to write a script file locally, then execute it on remote host.
 
 ## Execute local script on remote host
 
-```bash
-ssh user@remotehost 'bash -s' < localscript
-# or
-cat localscript  | ssh user@remotehost
-# or
-ssh -t user@remotehost "$(< localscript)"
-```
-
-The last one allows interactive commands e.g. `sudo`
-
-If the local script accepts arguments:
+> 📝 **Note**  
+> The most straightforward thing to do is copy your script to the remote host  
+> and run it using the "Single command" method above
 
 ```bash
-ssh user@remotehost 'bash -s' -- < localscript arg1 arg2 --argwithdash(es)
+# non-interactive script
+ssh remotehost 'bash -s' < localscript
+# or
+cat localscript  | ssh remotehost
+
+# non-interactive script that accepts arguments
+ssh remotehost 'bash -s' -- < localscript arg1 arg2
+# The double dash after `bash -s` means there are no more arguments to the remote bash.
+
+# interactive script
+ssh -t remotehost "$(< localscript)"
+
+# interactive script that accepts arguments
+ssh -t remotehost "bash <(base64 --decode <<< \"$(base64 < localscript)\" ) arg1 arg2"
 ```
 
-The double dash after `bash -s` means there are no more arguments to the remote bash.
+The base64 method prevents a lot of problems with more complex interactive scripts.
+
+How the base64 method works:
+- `localscript` is base64 encoded into a string, before ssh connection is established.
+- On remotehost, this string given to `base64 --decode` as a bash `<<<` "here string"
+- The decoded script is then given to bash as a 'piped filename' using `<(...)` "process substitution"
+
+Another way. slightly shorter, but less intuitive:
+```bash
+# replace the escaped double quotes with single quotes.
+ssh -t remotehost "bash <(base64 --decode <<< '$(base64 < localscript)' ) arg1 arg2"
+```
+
+Although `$(base64 < localscript)` is enclosed in single quotes, it runs,  
+because the command line is parsed twice.  
+Apparently, single quoted command substitution works in a "double parse" scenario.
+
+Reference: https://antofthy.gitlab.io/info/apps/ssh_remote_commands.txt
 
 ## sudo in ssh heredoc
 
 For example, this works:
 ```bash
-ssh -t example.com "sudo /etc/init.d/apache2 reload"
+ssh -t remotehost "sudo /etc/init.d/apache2 reload"
 ```
 But not this:
 ```bash
-ssh -t example.com <<'EOF'
+ssh -t remotehost <<'EOF'
 sudo /etc/init.d/apache2 reload
 EOF
 
@@ -92,7 +118,7 @@ sudo: no tty present and no askpass program specified
 Solution:  
 use `cat` and "command substitution"
 ```bash
-ssh -t example.com "$(cat <<'EOF'
+ssh -t remotehost "$(cat <<'EOF'
 sudo /etc/init.d/apache2 reload
 ls 'file with spaces'
 echo "$USER on $HOSTNAME
@@ -108,10 +134,10 @@ A more complex example:
   whether the containers are running or not.
 - need to run `find -exec awk` as root
 
-```
+```bash
 #!/bin/bash
 
-ssh -t example.com "$( cat <<'EOF'
+ssh -t remotehost "$( cat <<'EOF'
 sudo find /var/lib/docker/volumes/portainer_data/_data/ \
     -name docker-compose.yml -exec \
 awk '
@@ -126,7 +152,7 @@ EOF
 )"
 ```
 Result:
-```
+```json
 [sudo] password for some_user:
     container_name: jellyfin
     ports:
