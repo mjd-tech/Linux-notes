@@ -117,21 +117,32 @@ ssh remotehost 'bash -s' -- < localscript arg1 arg2
 ssh -t remotehost "$(< localscript)"
 
 # interactive script that accepts arguments - base64 method
-ssh -t remotehost "bash <(base64 --decode <<< '$(base64 < localscript)' ) arg1 arg2"
+ssh -t remotehost "bash -i <(base64 --decode <<< '$(base64 < localscript)' ) arg1 arg2"
 ```
+> 📝 **Note**  
+> - The first 3 methods don't always work.
+> - Sometimes you get strange errors. It depends on the script that you want to run.
+> - The base64 method is much more reliable.
 
-The base64 method prevents a lot of problems with more complex interactive scripts.
+How base64 method works:  
+Basically, it copies localscript to a tempfile on remotehost, then remote bash runs the tempfile.
 
-How the base64 method works:
-- `localscript` is base64 encoded into a string, before ssh connection is established.
-- On remotehost, this string given to `base64 --decode` as a bash `<<<` "here string"
-- The decoded script is then given to bash as a 'piped filename' using `<(...)` "process substitution"
-- Although `$(base64 < localscript)` is enclosed in single quotes, it runs, 
-  Apparently, single quoted command substitution works in a "double parse" scenario.
+- as always, the command is parsed TWICE, first locally, then remotely
+- The remote command is enclosed in double quotes.
+- the single quotes surrounding `$(base64 < localscript)` are **literal** characters  
+  that will be sent to remotehost,
+- Therefore, `base64 < localscript` is executed locally,  
+  and the resulting encoded string is substituted into the command line.
+- ssh sends the following command to remotehost:  
+  `bash <(base64 --decode <<< 'encoded_string') arg1 arg2`
+- On remotehost, the single quotes are **syntax** characters.
+- encoded_string is given to `base64 --decode` as a bash `<<<` "here string"
+- The decoded script is then given to bash as an 'auto-generated tempfile' using `<(...)` "process substitution"
+- The tempfile is automatically deleted when script is finished.
 - Output can be captured using the `| tee result.txt` method
 
-Reference: https://antofthy.gitlab.io/info/apps/ssh_remote_commands.txt
 
+Reference: https://antofthy.gitlab.io/info/apps/ssh_remote_commands.txt
 
 ## A more complex example
 - List the ports used by Docker/Portainer on a remote host,
