@@ -96,6 +96,10 @@ To stop this, redirect output, as follows:
     0   *   *   *   *  /some/command   >/dev/null 2>&1
 ```
 ## Cron GOTCHAs
+1) $PATH is different in cron than in your terminal
+2) $USER does not exist in cron environment, use $LOGNAME instead
+3) Anything set in your `.bashrc` is **ignored** in cron
+
 Sometimes a command or script will work from the terminal but fail in a cron job.  
 Cron jobs execute in a **limited** environment, not the same as your login shell.
 
@@ -109,8 +113,9 @@ LANG=en_US.UTF-8
 SHELL=/bin/sh
 PWD=/home/fred
 ```
-Compare this with running `printenv` from the terminal.
+Compare this with running `printenv` in the terminal.
 
+### PATH
 Most often, the problem is with the `PATH`.  
 To fix it, do one or more of the following
 
@@ -119,24 +124,72 @@ To fix it, do one or more of the following
 - set the `PATH` variable in the crontab file, this will apply to all cron jobs.
 
 ```bash
-# Use an absolute path
-/opt/app/bin/some_app
+# Use an absolute path in crontab
+* * * * * /opt/app/bin/some_app
 
-# Add to existing path in a shell script
+# Set path in shell script
 PATH=/opt/app/bin:$PATH
 some_app
 
-# Set path in a crontab. you need to specify the entire PATH
+# Set path in crontab. you need to specify the entire PATH
 PATH=/opt/app/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 0 1 * * * some_app
 
 # You CANNOT do this in a crontab
 PATH=/opt/app/bin:$PATH
 ```
+### $USER
+- If your script uses the `$USER` environment variable, it **won't work** in cron
+- For some arbitrary reason, this variable does not exist in the cron environment
+- Use `$LOGNAME` instead
 
-If your script uses the `$USER` environment variable, it won't work in cron. This variable does not exist in the cron environment. Use `$LOGNAME` instead.
+### .bashrc
+- even if your script starts with `#!/bin/bash`, the `~/.bashrc` file is not read.
+- any variables or functions defined in .bashrc **won't work** in cron
 
-Beware of commands like **curl** and **rsync --progress** that give status output while the command is running. This **won't work** in cron. To fix.
+this is the result of running `bash -c set` in a user cron job.
+It shows which BASH variables are available in cron and can be used in a script.
+```
+BASH=/usr/bin/bash
+BASHOPTS=checkwinsize:cmdhist:complete_fullquote:extquote:force_fignore:globasciiranges:globskipdots:hostcomplete:interactive_comments:patsub_replacement:progcomp:promptvars:sourcepath
+BASH_ALIASES=()
+BASH_ARGC=()
+BASH_ARGV=()
+BASH_CMDS=()
+BASH_EXECUTION_STRING=set
+BASH_LINENO=()
+BASH_LOADABLES_PATH=/usr/local/lib/bash:/usr/lib/bash:/opt/local/lib/bash:/usr/pkg/lib/bash:/opt/pkg/lib/bash:.
+BASH_SOURCE=()
+BASH_VERSINFO=([0]="5" [1]="2" [2]="21" [3]="1" [4]="release" [5]="x86_64-pc-linux-gnu")
+BASH_VERSION='5.2.21(1)-release'
+DIRSTACK=()
+EUID=1000
+GROUPS=()
+HOME=/home/fred
+HOSTNAME=bedrock
+HOSTTYPE=x86_64
+IFS=$' \t\n'
+LANG=en_US.UTF-8
+LOGNAME=fred
+MACHTYPE=x86_64-pc-linux-gnu
+OPTERR=1
+OPTIND=1
+OSTYPE=linux-gnu
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+PPID=199286
+PS4='+ '
+PWD=/home/fred
+SHELL=/bin/sh
+SHELLOPTS=braceexpand:hashall:interactive-comments
+SHLVL=1
+TERM=dumb
+UID=1000
+_=bash
+```
+Compare this with running `set` in the terminal.
+
+### Dynamic status
+Beware of commands like **curl** and **rsync --progress** that give status output while the command is running. This **won't work** in cron. To fix:
 - most commands have a "silent" or "quiet" option
 - otherwise, redirect output to /dev/null
 
@@ -144,14 +197,14 @@ Beware of commands like **curl** and **rsync --progress** that give status outpu
 # curl example
 curl --silent -o output_file http://example.com
 
-# Redirect only stdout output, and not stderr
+# Redirect only stdout, not stderr
 some-command >/dev/null
 
 # Redirect both stdout and stderr
     some-command >/dev/null 2>&1
 ```
 
-## Other Issues
+### Other Issues
 - It's a pain to run a one-time cron job for testing.
 - You have to edit the crontab file, test the cron job, then remember to edit the crontab again.
 - using the `at` command is a workaround, but `at` is a completely different application, it's not cron, so you're not really testing cron
